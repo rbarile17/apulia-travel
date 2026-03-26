@@ -1,0 +1,908 @@
+prefixes:
+ grel: http://users.ugent.be/~bjdmeest/function/grel.ttl#
+ idlab-fn: https://w3id.org/imec/idlab/function#
+ clv: https://w3id.org/italia/onto/CLV/
+ sm: https://w3id.org/italia/onto/SM/
+ access-condition: https://w3id.org/italia/onto/AccessCondition/
+ ti: https://w3id.org/italia/onto/TI/
+ poi: https://w3id.org/italia/onto/POI/
+ l0: https://w3id.org/italia/onto/l0/
+ td: https://apuliatravel.org/td/
+mappings:
+  geometry:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:Geometry/$(id_attrattore)_$(nm_attrattore_it)_geometry]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, clv:Geometry]
+      - [clv:lat, $(latitudine)]
+      - [clv:coordinate, $(latitudine)]
+      - [clv:long, $(longitudine)]
+      - [clv:coordinate, $(longitudine)]
+      - p: sm:isGeometryFor
+        o:
+          mapping: poi
+  rating:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: sm:Rating/$(cod_ranking)
+    po:
+      - [a, sm:Rating]
+      - p: sm:userRating
+        o:
+          value: $(cod_ranking)
+          datatype: xsd:int
+  review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_generic_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - p: sm:hasRating
+        o:
+          mapping: rating
+  website:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: sm:WebSite/$(web)
+    po:
+      - [a, sm:WebSite]
+      - p: sm:isWebSiteOf
+        o:
+          mapping: contactPoint
+  telephone:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: sm:Telephone/$(tel_transf)
+    po:
+      - [a, sm:Telephone]
+      - [sm:telephoneNumber, $(tel_transf)]
+      - p: sm:isTelephoneOf
+        o:
+          mapping: contactPoint
+  email:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: sm:Email/$(email)
+    po:
+      - [a, sm:Email]
+      - p: sm:emailAddress
+        o:
+          value: $(email)
+          datatype: xsd:anyURI
+      - p: sm:isEmailOf
+        o:
+          mapping: contactPoint
+  addressArea:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: clv:AddressArea/$(ambito_territoriale)
+    po:
+      - [a, clv:AddressArea]
+      - [l0:name, $(ambito_territoriale)]
+  streetToponym:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:StreetToponym/$(id_attrattore)_$(nm_attrattore_it)_street_toponym]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, clv:StreetToponym]
+      - [rdfs:label, $(indirizzo)]
+  city:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: clv:City/$(comune)
+    po:
+      - [a, clv:City]
+      - [l0:name, $(comune)]
+      - p: clv:hasHigherRank
+        o:
+          mapping: province
+      - p: clv:situatedWithin
+        o:
+          mapping: province
+  province:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s: clv:Province/$(provincia)_province
+    po:
+      - [a, clv:Province]
+      - [clv:acronym, $(sigla_provincia)]
+      - [l0:name, $(provincia)]
+      - p: clv:hasLowerRank
+        o:
+          mapping: city
+  streetNumber:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:StreetNumber/$(id_attrattore)_$(nm_attrattore_it)_street_number]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, clv:CivicNumbering]
+      - p: clv:streetNumber
+        o:
+          value: $(civico)
+          datatype: xsd:string
+  address:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:Address/$(id_attrattore)_$(nm_attrattore_it)_address]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, clv:Address]
+      - p: clv:hasAddressComponent
+        o:
+          mapping: city
+      - p: clv:hasCity
+        o:
+          mapping: city
+      - p: clv:hasAddressComponent
+        o:
+          mapping: province
+      - p: clv:hasProvince
+        o:
+          mapping: province
+      - p: clv:hasAddressComponent
+        o:
+          mapping: streetToponym
+      - p: clv:hasStreetToponym
+        o:
+          mapping: streetToponym
+      - p: clv:hasAddressComponent
+        o:
+          mapping: addressArea
+      - p: clv:hasAddressArea
+        o:
+          mapping: addressArea
+      - p: clv:isAddressFor
+        o:
+          mapping: poi
+      - p: clv:hasAddressComponent
+        o:
+          mapping: streetNumber
+      - p: clv:hasNumber
+        o:
+          mapping: streetNumber
+      - [clv:postCode, $(cap)]
+  openingHoursMorning:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:OpeningHours/$(id_attrattore)_$(nm_attrattore_it)_opening_hours_morning]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    condition:
+      function: grel:boolean_not
+      parameters:
+        - parameter: grel:bool_b
+          value:
+            function: idlab-fn:isNull
+            parameters:
+              - [idlab-fn:str, $(orario_apertura_mattina)]
+    po:
+      - [a, clv:OpeningHoursSpecification]
+      - [a, clv:AccessCondition]
+      - p: clv:opens
+        o:
+          function: grel:string_substring
+          parameters:
+            - [grel:valueParameter, $(orario_apertura_mattina)]
+            - [grel:param_int_i_from, 0]
+            - [grel:param_int_i_opt_to, 5]
+      - p: clv:closes
+        o:
+          function: grel:string_substring
+          parameters:
+            - [grel:valueParameter, $(orario_apertura_mattina)]
+            - [grel:param_int_i_from, 8]
+            - [grel:param_int_i_opt_to, 13]
+      - p: access-condition:isAccessConditionOf
+        o:
+          mapping: poi
+      - p: ti:hasDayOfWeek
+        o:
+          value: ti:Monday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(LUNEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Tuesday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(MARTEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Wednesday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(MERCOLEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o:
+          value: ti:Thursday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(GIOVEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Friday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(VENERDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Saturday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(SABATO)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Sunday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(DOMENICA)]
+            - [grel:valueParameter2, "true"]
+  openingHoursAfternoon:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, clv:OpeningHours/$(id_attrattore)_$(nm_attrattore_it)_opening_hours_afternoon]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    condition:
+      function: grel:boolean_not
+      parameters:
+        - parameter: grel:bool_b
+          value:
+            function: idlab-fn:isNull
+            parameters:
+              - [idlab-fn:str, $(orario_apertura_pomeriggio)]
+    po:
+      - [a, clv:OpeningHoursSpecification]
+      - [a, clv:AccessCondition]
+      - p: clv:opens
+        o:
+          function: grel:string_substring
+          parameters:
+            - [grel:valueParameter, $(orario_apertura_pomeriggio)]
+            - [grel:param_int_i_from, 0]
+            - [grel:param_int_i_opt_to, 5]
+      - p: clv:closes
+        o:
+          function: grel:string_substring
+          parameters:
+            - [grel:valueParameter, $(orario_apertura_pomeriggio)]
+            - [grel:param_int_i_from, 8]
+            - [grel:param_int_i_opt_to, 13]
+      - p: access-condition:isAccessConditionOf
+        o:
+          mapping: poi
+      - p: ti:hasDayOfWeek
+        o:
+          value: ti:Monday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(LUNEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Tuesday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(MARTEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Wednesday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(MERCOLEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o:
+          value: ti:Thursday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(GIOVEDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Friday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(VENERDI)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Saturday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(SABATO)]
+            - [grel:valueParameter2, "true"]
+      - p: ti:hasDayOfWeek
+        o: 
+          value: ti:Sunday
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(DOMENICA)]
+            - [grel:valueParameter2, "true"]
+  contactPoint:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:ContactPoint/$(id_attrattore)_$(nm_attrattore_it)_contact_point]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:OnlineContactPoint]
+      - [a, sm:ContactPoint]
+      - p: sm:hasEmail
+        o:
+          mapping: email
+      - p: sm:hasTelephone
+        o:
+          mapping: telephone
+      - p: sm:hasWebSite
+        o:
+          mapping: website
+      - p: sm:isOnlineContactPointOf
+        o:
+          mapping: poi
+  art_and_culture_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_art_culture_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Arte e Cultura"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Arte e Cultura)
+          type: iri
+  food_wine_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_food_wine_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Enogastronomia"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Enogastronomia)
+          type: iri
+  nature_sport_wellness_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_nature_sport_wellness_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Natura, Sport e Benessere"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Natura, Sport e Benessere)
+          type: iri
+  theatre_dance_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_theatre_dance_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Teatro e Danza"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Teatro e Danza)
+          type: iri
+  music_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_music_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Musica"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Musica)
+          type: iri
+  cinema_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_cinema_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Cinema"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Cinema)
+          type: iri
+  entertainment_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_entertainment_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Intrattenimento"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Intrattenimento)
+          type: iri
+  tradition_spirituality_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_tradition_spirituality_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Tradizioni e Spiritualità"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Tradizioni e Spiritualità)
+          type: iri
+  events:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_events_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Eventi"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Meeting Incentive Congressi ed Eventi)
+          type: iri
+  sea_review:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, sm:Review/$(id_attrattore)_$(nm_attrattore_it)_sea_review]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, sm:Review]
+      - [sm:reviewAspect, "Mare"]
+      - p: sm:hasRating
+        o:
+          value: sm:Rating/$(Mare)
+          type: iri
+  poi:
+    sources:
+      - [attrattori.json~jsonpath, "$.[*]"]
+    s:
+      function: grel:string_replace
+      parameters:
+        - [grel:valueParameter, poi:PointOfInterest/$(id_attrattore)_$(nm_attrattore_it)]
+        - [grel:p_string_find, " "]
+        - [grel:p_string_replace, "_"]
+    po:
+      - [a, poi:PointOfInterest]
+      - [a, td:TouristDestination]
+      - p: a
+        o: [td:NaturalPark]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "PARCHI_NATURALI"]
+      - p: a
+        o: [td:NationalPark]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "PARCHI_NAZIONALI"]
+      - p: a
+        o: [td:Tower]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "TORRI"]
+      - p: a
+        o: [td:Basilica]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "BASILICHE"]
+      - p: a
+        o: [td:RomanesqueChurch]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CHIESE_ROMANICHE"]
+      - p: a
+        o: [td:NaturalArea]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "AREE_NATURALI"]
+      - p: a
+        o: [td:UndergroundChurch]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CHIESE_IPOGEE"]
+      - p: a
+        o: [td:Cave]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "GROTTE"]
+      - p: a
+        o: [td:SeaCave]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "GROTTE_MARINE"]
+      - p: a
+        o: [td:UndergroundOilMill]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "FRANTOI_IPOGEI"]
+      - p: a
+        o: [td:EntertainmentBusiness]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "INTRATTENIMENTO"]
+      - p: a
+        o: [td:Church]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CHIESE"]
+      - p: a
+        o: [td:Museum]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "MUSEI"]
+      - p: a
+        o: [td:OrthodoxWorship]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CULTI_ORTODOSSI"]
+      - p: a
+        o: [td:Ravine]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "GRAVINE"]
+      - p: a
+        o: [td:EcoMuseum]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "ECOMUSEI"]
+      - p: a
+        o: [td:Lake]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "LAGHI"]
+      - p: a
+        o: [td:WWFOasis]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "OASI_WWF"]
+      - p: a
+        o: [td:MarineReserve]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "RISERVE_MARINE"]
+      - p: a
+        o: [td:Convent]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CONVENTI"]
+      - p: a
+        o: [td:ArecheologicalPark]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "PARCHI_ARCHEOLOGICI"]
+      - p: a
+        o: [td:Amphitheater]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "ANFITEATRI"]
+      - p: a
+        o: [td:Garden]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "GIARDINI"]
+      - p: a
+        o: [td:Library]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "BIBLIOTECHE"]
+      - p: a
+        o: [td:Trullo]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "TRULLI"]
+      - p: a
+        o: [td:Reserve]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "RISERVE"]
+      - p: a
+        o: [td:Synagogue]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "SINAGOGHE"]
+      - p: a
+        o: [td:Port]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "PORTI"]
+      - p: a
+        o: [td:Mill]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "MULINI"]
+      - p: a
+        o: [td:Beach]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "SPIAGGE"]
+      - p: a
+        o: [td:Mosque]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "MOSCHEE"]
+      - p: a
+        o: [td:Worship]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CULTO"]
+      - p: a
+        o: [td:Landing]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "APPRODI"]
+      - p: a
+        o: [td:Farmhouse]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "MASSERIE"]
+      - p: a
+        o: [td:HistoricTheater]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "TEATRI_STORICI"]
+      - p: a
+        o: [td:Castle]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "CASTELLI"]
+      - p: a
+        o: [td:HistoricPalace]
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(tipologia)]
+            - [grel:valueParameter2, "PALAZZI_STORICI"]
+      - [rdfs:label, $(nm_attrattore_it), it~lang]
+      - [rdfs:label, $(nm_attrattore_en), en~lang]
+      - p: clv:hasGeometry
+        o:
+          mapping: geometry
+      - p: access-condition:hasAccessCondition
+        o: 
+          value: access-condition:mandatoryBooking
+          type: iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, $(flg_prenotazione_necessaria)]
+            - [grel:valueParameter2, "true"]
+      - p: access-condition:hasAccessCondition
+        o:
+          mapping: openingHoursMorning
+      - p: access-condition:hasAccessCondition
+        o:
+          mapping: openingHoursAfternoon
+      - p: clv:hasAddress
+        o:
+          mapping: address
+      - p: clv:hasPrimaryAddress
+        o:
+          mapping: address
+      - p: sm:hasContactPoint
+        o:
+          mapping: contactPoint
+      - p: sm:hasOnlineContactPoint
+        o:
+          mapping: contactPoint
+      - p: sm:hasReview
+        o:
+          mapping: review
+      - p: sm:hasReview
+        o:
+          mapping: art_and_culture_review
+      - p: sm:hasReview
+        o:
+          mapping: food_wine_review
+      - p: sm:hasReview
+        o:
+          mapping: nature_sport_wellness_review
+      - p: sm:hasReview
+        o:
+          mapping: theatre_dance_review
+      - p: sm:hasReview
+        o:
+          mapping: music_review
+      - p: sm:hasReview
+        o:
+          mapping: cinema_review
+      - p: sm:hasReview
+        o:
+          mapping: entertainment_review
+      - p: sm:hasReview
+        o:
+          mapping: tradition_spirituality_review
+      - p: sm:hasReview
+        o:
+          mapping: events
+      - p: sm:hasReview
+        o:
+          mapping: sea_review
